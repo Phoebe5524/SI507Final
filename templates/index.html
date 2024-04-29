@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search for Similar Artists</title>
+</head>
+<body>
+    <h1>Search for Similar Artists</h1>
+    <form id="searchForm">
+        <label for="artist">Enter Artist Name:</label>
+        <input type="text" id="artist" name="artist" required>
+        <button type="submit">Search</button>
+    </form>
+    
+    <div id="results"></div>
+
+    <script>
+        document.getElementById("searchForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            var artistName = document.getElementById("artist").value;
+            fetch("/search?artist=" + encodeURIComponent(artistName))
+                .then(response => response.json())
+                .then(data => {
+                    var resultsDiv = document.getElementById("results");
+                    resultsDiv.innerHTML = ""; // Clear previous results
+                    if (data.error) {
+                        resultsDiv.innerHTML = "<p>" + data.error + "</p>";
+                    } else {
+                        var artists = data.similarartists.artist;
+                        if (artists && artists.length > 0) {
+                            artists.forEach(artist => {
+                                var artistDiv = document.createElement("div");
+                                artistDiv.innerHTML = `
+                                    <p>Name: ${artist.name}</p>
+                                    <p>Match index: ${artist.match}</p>
+                                    <p>Personal homepage URL: <a href="${artist.url}" target="_blank">${artist.url}</a></p>
+                                    <hr>
+                                `;
+                                resultsDiv.appendChild(artistDiv);
+                            });
+                        } else {
+                            resultsDiv.innerHTML = "<p>No similar artists found.</p>";
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    var resultsDiv = document.getElementById("results");
+                    resultsDiv.innerHTML = "<p>An error occurred while fetching data.</p>";
+                });
+        });
+    </script>
+</body>
+</html>
